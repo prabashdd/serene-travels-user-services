@@ -169,8 +169,8 @@ public class UserController {
     }
 
     @Operation(summary = "List/search users (admin)",
-            description = "Paginated listing, optionally filtered by user type, verified status, and active "
-                    + "status. Requires the ADMIN role.")
+            description = "Paginated listing, optionally filtered by user type, verified status, active status, "
+                    + "and company (e.g. all AGENT users at a specific partner company). Requires the ADMIN role.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Page of users returned"),
             @ApiResponse(responseCode = "403", description = "Caller is not an ADMIN", content = @Content)
@@ -181,8 +181,9 @@ public class UserController {
             @Parameter(description = "Filter by user type") @RequestParam(required = false) UserType userType,
             @Parameter(description = "Filter by verified status") @RequestParam(required = false) Boolean verified,
             @Parameter(description = "Filter by active status") @RequestParam(required = false) Boolean active,
+            @Parameter(description = "Filter by partner company id") @RequestParam(required = false) UUID companyId,
             Pageable pageable) {
-        return ResponseEntity.ok(userService.list(userType, verified, active, pageable));
+        return ResponseEntity.ok(userService.list(userType, verified, active, companyId, pageable));
     }
 
     @Operation(summary = "Update a user's profile (admin)", description = "Requires the ADMIN role.")

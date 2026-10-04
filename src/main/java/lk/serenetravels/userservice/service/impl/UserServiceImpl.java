@@ -134,8 +134,10 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public Page<UserResponse> list(UserType userType, Boolean verified, Boolean active, Pageable pageable) {
-        return userProfileRepository.findAll(UserProfileSpecifications.filter(userType, verified, active), pageable)
+    public Page<UserResponse> list(UserType userType, Boolean verified, Boolean active, UUID companyId,
+            Pageable pageable) {
+        return userProfileRepository
+                .findAll(UserProfileSpecifications.filter(userType, verified, active, companyId), pageable)
                 .map(this::toResponse);
     }
 

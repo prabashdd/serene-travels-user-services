@@ -23,7 +23,7 @@ public interface UserService {
 
     UserResponse getByKeycloakUserId(String keycloakUserId);
 
-    Page<UserResponse> list(UserType userType, Boolean verified, Boolean active, Pageable pageable);
+    Page<UserResponse> list(UserType userType, Boolean verified, Boolean active, UUID companyId, Pageable pageable);
 
     UserResponse updateProfile(UUID id, UpdateUserProfileRequest request);
 
