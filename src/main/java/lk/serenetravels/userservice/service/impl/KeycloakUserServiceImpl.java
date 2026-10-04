@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class KeycloakUserServiceImpl implements KeycloakUserService {
@@ -73,6 +74,16 @@ public class KeycloakUserServiceImpl implements KeycloakUserService {
     }
 
     @Override
+    public Optional<UserRepresentation> findByUsernameOrEmail(String usernameOrEmail) {
+        List<UserRepresentation> byUsername = realm().users().search(usernameOrEmail, true);
+        if (!byUsername.isEmpty()) {
+            return Optional.of(byUsername.get(0));
+        }
+        List<UserRepresentation> byEmail = realm().users().searchByEmail(usernameOrEmail, true);
+        return byEmail.isEmpty() ? Optional.empty() : Optional.of(byEmail.get(0));
+    }
+
+    @Override
     public void setEnabled(String keycloakUserId, boolean enabled) {
         UserRepresentation user = getUser(keycloakUserId);
         user.setEnabled(enabled);
@@ -80,9 +91,38 @@ public class KeycloakUserServiceImpl implements KeycloakUserService {
     }
 
     @Override
+    public void updateProfile(String keycloakUserId, String email, String firstName, String lastName) {
+        UserRepresentation user = getUser(keycloakUserId);
+        user.setEmail(email);
+        user.setFirstName(firstName);
+        user.setLastName(lastName);
+        realm().users().get(keycloakUserId).update(user);
+    }
+
+    @Override
+    public void setPassword(String keycloakUserId, String password, boolean temporary) {
+        CredentialRepresentation credential = new CredentialRepresentation();
+        credential.setType(CredentialRepresentation.PASSWORD);
+        credential.setValue(password);
+        credential.setTemporary(temporary);
+        realm().users().get(keycloakUserId).resetPassword(credential);
+    }
+
+    @Override
     public void assignRealmRole(String keycloakUserId, String roleName) {
         RoleRepresentation role = realm().roles().get(roleName).toRepresentation();
         realm().users().get(keycloakUserId).roles().realmLevel().add(List.of(role));
+    }
+
+    @Override
+    public void removeRealmRole(String keycloakUserId, String roleName) {
+        RoleRepresentation role = realm().roles().get(roleName).toRepresentation();
+        realm().users().get(keycloakUserId).roles().realmLevel().remove(List.of(role));
+    }
+
+    @Override
+    public void sendPasswordResetEmail(String keycloakUserId) {
+        realm().users().get(keycloakUserId).executeActionsEmail(List.of("UPDATE_PASSWORD"));
     }
 
     @Override

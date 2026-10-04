@@ -34,6 +34,19 @@ public class UserProfile {
     @Column(name = "verified", nullable = false, columnDefinition = "boolean default false")
     private boolean verified;
 
+    // Independent of verified: tracks ongoing employment/account lifecycle
+    // (e.g. an admin disabling someone who has left), not the one-time
+    // registration confirmation. Keycloak's enabled flag always mirrors
+    // verified && active (see UserServiceImpl.syncKeycloakEnabled).
+    @Column(name = "active", nullable = false, columnDefinition = "boolean default true")
+    private boolean active = true;
+
+    // Only meaningful for AGENT users; references another UserProfile's id
+    // whose userType is MANAGER. No JPA relationship mapping — kept as a
+    // plain FK-by-value, consistent with the rest of this entity.
+    @Column(name = "manager_id")
+    private UUID managerId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -83,6 +96,22 @@ public class UserProfile {
 
     public void setVerified(boolean verified) {
         this.verified = verified;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
+
+    public UUID getManagerId() {
+        return managerId;
+    }
+
+    public void setManagerId(UUID managerId) {
+        this.managerId = managerId;
     }
 
     public Instant getCreatedAt() {

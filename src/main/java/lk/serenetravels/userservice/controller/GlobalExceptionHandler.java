@@ -1,5 +1,7 @@
 package lk.serenetravels.userservice.controller;
 
+import lk.serenetravels.userservice.exception.AuthenticationFailedException;
+import lk.serenetravels.userservice.exception.InvalidManagerAssignmentException;
 import lk.serenetravels.userservice.exception.KeycloakAdminException;
 import lk.serenetravels.userservice.exception.UserAlreadyExistsException;
 import lk.serenetravels.userservice.exception.UserNotFoundException;
@@ -27,6 +29,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(KeycloakAdminException.class)
     public ResponseEntity<Map<String, Object>> handleKeycloakAdmin(KeycloakAdminException ex) {
         return problem(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
+
+    @ExceptionHandler(AuthenticationFailedException.class)
+    public ResponseEntity<Map<String, Object>> handleAuthenticationFailed(AuthenticationFailedException ex) {
+        return problem(HttpStatus.UNAUTHORIZED, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidManagerAssignmentException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidManagerAssignment(InvalidManagerAssignmentException ex) {
+        return problem(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     private ResponseEntity<Map<String, Object>> problem(HttpStatus status, String message) {
