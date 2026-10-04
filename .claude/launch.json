@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "user-service",
+      "runtimeExecutable": "D:\\dev\\services\\user-service\\mvnw.cmd",
+      "runtimeArgs": ["spring-boot:run"],
+      "port": 8081
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/user_service
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${KEYCLOAK_ISSUER_URI:http://localhost:8880/realms/serenetravels}
+
+server:
+  port: 8081
+
+keycloak:
+  server-url: ${KEYCLOAK_SERVER_URL:http://localhost:8880}
+  realm: ${KEYCLOAK_REALM:serenetravels}
+  admin-client-id: ${KEYCLOAK_ADMIN_CLIENT_ID:user-service}
+  # Local dev secret only — rotate and inject via env var for any shared/non-local environment.
+  admin-client-secret: ${KEYCLOAK_ADMIN_CLIENT_SECRET:JlZehZ3fUI0cjLhk7jBmDUCoGf5HrfOJSfbYyx5oEE5D3l33ERqr95I0e1CngdygY0WA1MiBS0lDpiMOa9yZWI}
