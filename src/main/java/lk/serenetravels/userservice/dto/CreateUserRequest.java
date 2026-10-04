@@ -6,6 +6,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lk.serenetravels.userservice.entity.UserType;
 
+import java.util.UUID;
+
 public class CreateUserRequest {
 
     @Schema(example = "janith.thiwanka")
@@ -32,6 +34,10 @@ public class CreateUserRequest {
     @Schema(description = "Any user type is allowed here, unlike self-registration which is always AGENT")
     @NotNull
     private UserType userType;
+
+    @Schema(description = "Required when userType is AGENT (the partner company they work for); must be omitted "
+            + "for every other user type")
+    private UUID companyId;
 
     public String getUsername() {
         return username;
@@ -79,5 +85,13 @@ public class CreateUserRequest {
 
     public void setUserType(UserType userType) {
         this.userType = userType;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
     }
 }

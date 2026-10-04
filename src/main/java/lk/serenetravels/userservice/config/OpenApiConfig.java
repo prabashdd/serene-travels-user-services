@@ -27,7 +27,7 @@ public class OpenApiConfig {
     // security requirement gets dropped before serialization), so it's set
     // directly on the built model instead, via the customizer bean below.
     private static final Set<String> PUBLIC_OPERATIONS = Set.of(
-            "register", "login", "refresh", "logout", "forgotPassword");
+            "register", "login", "refresh", "logout", "forgotPassword", "lookupCompanies");
 
     private final KeycloakProperties keycloakProperties;
 

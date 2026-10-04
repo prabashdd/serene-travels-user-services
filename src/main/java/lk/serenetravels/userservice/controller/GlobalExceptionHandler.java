@@ -1,6 +1,8 @@
 package lk.serenetravels.userservice.controller;
 
 import lk.serenetravels.userservice.exception.AuthenticationFailedException;
+import lk.serenetravels.userservice.exception.CompanyNotFoundException;
+import lk.serenetravels.userservice.exception.InvalidCompanyAssignmentException;
 import lk.serenetravels.userservice.exception.InvalidManagerAssignmentException;
 import lk.serenetravels.userservice.exception.KeycloakAdminException;
 import lk.serenetravels.userservice.exception.UserAlreadyExistsException;
@@ -38,6 +40,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidManagerAssignmentException.class)
     public ResponseEntity<Map<String, Object>> handleInvalidManagerAssignment(InvalidManagerAssignmentException ex) {
+        return problem(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    @ExceptionHandler(CompanyNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleCompanyNotFound(CompanyNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidCompanyAssignmentException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidCompanyAssignment(InvalidCompanyAssignmentException ex) {
         return problem(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 

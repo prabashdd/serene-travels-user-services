@@ -47,6 +47,13 @@ public class UserProfile {
     @Column(name = "manager_id")
     private UUID managerId;
 
+    // Only meaningful for AGENT users: the partner company they work for.
+    // ADMIN/MANAGER work directly for the operating company and have no
+    // Company record of their own. No JPA relationship mapping, same as
+    // managerId above.
+    @Column(name = "company_id")
+    private UUID companyId;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -112,6 +119,14 @@ public class UserProfile {
 
     public void setManagerId(UUID managerId) {
         this.managerId = managerId;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
     }
 
     public Instant getCreatedAt() {

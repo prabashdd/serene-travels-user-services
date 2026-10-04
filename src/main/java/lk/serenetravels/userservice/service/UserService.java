@@ -1,6 +1,7 @@
 package lk.serenetravels.userservice.service;
 
 import lk.serenetravels.userservice.dto.CreateUserRequest;
+import lk.serenetravels.userservice.dto.RegisterUserRequest;
 import lk.serenetravels.userservice.dto.UpdateUserProfileRequest;
 import lk.serenetravels.userservice.dto.UserResponse;
 import lk.serenetravels.userservice.entity.UserType;
@@ -13,6 +14,8 @@ import java.util.UUID;
 public interface UserService {
 
     UserResponse createUser(CreateUserRequest request, boolean temporaryPassword, boolean verified);
+
+    UserResponse registerAgent(RegisterUserRequest request);
 
     UserResponse verifyUser(UUID id);
 
@@ -28,9 +31,16 @@ public interface UserService {
 
     List<UserResponse> getTeam(UUID managerId);
 
+    UserResponse assignCompany(UUID agentId, UUID companyId);
+
     UserResponse deactivate(UUID id);
 
     UserResponse reactivate(UUID id);
 
     UserResponse changeUserType(UUID id, UserType newType);
+
+    // Re-syncs Keycloak's enabled flag for every already-verified, active AGENT
+    // at the given company — called after an admin verifies that company, since
+    // those agents may have been waiting on exactly that.
+    void refreshKeycloakEnabledForCompany(UUID companyId);
 }

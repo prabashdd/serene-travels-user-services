@@ -24,9 +24,12 @@ public class UserResponse {
     @Schema(description = "Id of the MANAGER this AGENT reports to; null if unassigned or not an AGENT")
     private final UUID managerId;
 
+    @Schema(description = "Id of the partner company this AGENT works for; null if unassigned or not an AGENT")
+    private final UUID companyId;
+
     public UserResponse(UUID id, String keycloakUserId, String username, String email,
                          String firstName, String lastName, UserType userType, boolean verified,
-                         boolean active, UUID managerId) {
+                         boolean active, UUID managerId, UUID companyId) {
         this.id = id;
         this.keycloakUserId = keycloakUserId;
         this.username = username;
@@ -37,6 +40,7 @@ public class UserResponse {
         this.verified = verified;
         this.active = active;
         this.managerId = managerId;
+        this.companyId = companyId;
     }
 
     public UUID getId() {
@@ -77,5 +81,9 @@ public class UserResponse {
 
     public UUID getManagerId() {
         return managerId;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
     }
 }

@@ -3,11 +3,13 @@ package lk.serenetravels.userservice.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import lk.serenetravels.userservice.dto.AssignCompanyRequest;
 import lk.serenetravels.userservice.dto.AssignManagerRequest;
 import lk.serenetravels.userservice.dto.CreateUserRequest;
 import lk.serenetravels.userservice.dto.RegisterUserRequest;
@@ -47,34 +49,65 @@ public class UserController {
     }
 
     @Operation(summary = "Self-register as an Agent",
-            description = "Public signup, no access token required. Always creates an AGENT, and the account "
-                    + "stays locked out of login until an admin verifies it (see PATCH /{id}/verify).")
+            description = "Public signup, no access token required. Always creates an AGENT. The agent's "
+                    + "employer is either an existing company — pass companyId, picked from "
+                    + "GET /api/v1/companies/lookup — or a brand-new one, submitted inline via company; "
+                    + "provide exactly one of the two. The new user always starts unverified. A brand-new "
+                    + "company also starts unverified; an existing one keeps whatever verified status it "
+                    + "already had. The account stays locked out of login until the user is verified "
+                    + "(PATCH /{id}/verify) and, if the company isn't already verified, that too "
+                    + "(PATCH /api/v1/companies/{id}/verify).")
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "User created, unverified"),
-            @ApiResponse(responseCode = "400", description = "Validation failed", content = @Content),
+            @ApiResponse(responseCode = "201", description = "User created (and, for a new company, the company too)"),
+            @ApiResponse(responseCode = "400", description = "Validation failed, or neither/both of companyId "
+                    + "and company were provided", content = @Content),
+            @ApiResponse(responseCode = "404", description = "companyId was provided but no such company exists",
+                    content = @Content),
             @ApiResponse(responseCode = "409", description = "Username or email already exists", content = @Content)
     })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(content = @Content(
+            schema = @Schema(implementation = RegisterUserRequest.class),
+            examples = {
+                    @ExampleObject(name = "Existing company (pick from the lookup list)", value = """
+                            {
+                              "username": "kasun.silva",
+                              "email": "kasun.silva@example.com",
+                              "firstName": "Kasun",
+                              "lastName": "Silva",
+                              "password": "Secret@123",
+                              "companyId": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                            }"""),
+                    @ExampleObject(name = "New company (not in the lookup list)", value = """
+                            {
+                              "username": "kasun.silva",
+                              "email": "kasun.silva@example.com",
+                              "firstName": "Kasun",
+                              "lastName": "Silva",
+                              "password": "Secret@123",
+                              "company": {
+                                "name": "Ceylon Holidays (Pvt) Ltd",
+                                "address": "42 Galle Road, Colombo 03",
+                                "registrationNumber": "PV 00123456",
+                                "phone": "+94 11 234 5678",
+                                "email": "info@ceylonholidays.lk"
+                              }
+                            }""")
+            }))
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterUserRequest request) {
-        CreateUserRequest createRequest = new CreateUserRequest();
-        createRequest.setUsername(request.getUsername());
-        createRequest.setEmail(request.getEmail());
-        createRequest.setFirstName(request.getFirstName());
-        createRequest.setLastName(request.getLastName());
-        createRequest.setPassword(request.getPassword());
-        createRequest.setUserType(UserType.AGENT);
-
-        UserResponse response = userService.createUser(createRequest, false, false);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.registerAgent(request));
     }
 
     @Operation(summary = "Create a user (admin)",
             description = "Creates a user of any type with an immediately usable, permanent password, verified "
-                    + "and enabled right away. Requires the ADMIN role.")
+                    + "and enabled right away. An AGENT must be created with an existing companyId (see "
+                    + "POST /api/v1/companies); every other user type must omit it. Requires the ADMIN role.")
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "User created"),
-            @ApiResponse(responseCode = "400", description = "Validation failed", content = @Content),
+            @ApiResponse(responseCode = "400", description = "Validation failed, or companyId required/not "
+                    + "applicable for this user type", content = @Content),
             @ApiResponse(responseCode = "403", description = "Caller is not an ADMIN", content = @Content),
+            @ApiResponse(responseCode = "404", description = "No company with that companyId", content = @Content),
             @ApiResponse(responseCode = "409", description = "Username or email already exists", content = @Content)
     })
     @PreAuthorize("hasRole('ADMIN')")
@@ -182,6 +215,24 @@ public class UserController {
             @Parameter(description = "Agent's user profile id") @PathVariable UUID agentId,
             @RequestBody AssignManagerRequest request) {
         return ResponseEntity.ok(userService.assignManager(agentId, request.getManagerId()));
+    }
+
+    @Operation(summary = "Assign or clear an agent's company (admin)",
+            description = "Sets which partner company an AGENT works for. Only AGENTs have a company; "
+                    + "ADMIN/MANAGER are internal to the operating company. Pass a null companyId to clear "
+                    + "the assignment. Requires the ADMIN role.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Company assignment updated"),
+            @ApiResponse(responseCode = "400", description = "Target is not an AGENT", content = @Content),
+            @ApiResponse(responseCode = "403", description = "Caller is not an ADMIN", content = @Content),
+            @ApiResponse(responseCode = "404", description = "No user or company with that id", content = @Content)
+    })
+    @PreAuthorize("hasRole('ADMIN')")
+    @PatchMapping("/{agentId}/company")
+    public ResponseEntity<UserResponse> assignCompany(
+            @Parameter(description = "Agent's user profile id") @PathVariable UUID agentId,
+            @RequestBody AssignCompanyRequest request) {
+        return ResponseEntity.ok(userService.assignCompany(agentId, request.getCompanyId()));
     }
 
     @Operation(summary = "List a manager's team (admin)",

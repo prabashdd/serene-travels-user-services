@@ -1,6 +1,18 @@
 spring:
   application:
     name: user-service
+  cloud:
+    consul:
+      host: ${CONSUL_HOST:localhost}
+      port: ${CONSUL_PORT:8500}
+      discovery:
+        enabled: true
+        register: true
+        deregister: true
+        prefer-ip-address: true
+        health-check-path: /actuator/health
+        health-check-interval: 15s
+        instance-id: ${spring.application.name}:${random.value}
   datasource:
     url: jdbc:postgresql://localhost:5432/user_service
     username: postgres
